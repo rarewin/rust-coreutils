@@ -1,0 +1,9 @@
+* coreutils programs written with Rust
+
+** Abstract
+
+These are the programs that I created for practicing Rust.
+
+** License
+
+These programs are under the BSD 2-Clause License. Please see LICENCE.txt.
