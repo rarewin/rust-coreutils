@@ -9,13 +9,23 @@ fn main() {
             Arg::with_name("n")
                 .short("n")
                 .help("do not output the trailing newline"),
+        ).arg(
+            Arg::with_name("e")
+                .short("e")
+                .help("enable interpretation of backslash escapes"),
         ).get_matches();
 
-    if m.occurrences_of("STRING") > 0 {
+    if m.is_present("STRING") {
         let args: Vec<_> = m.values_of("STRING").unwrap().collect();
 
         for i in 0..args.len() {
-            print!("{}", args[i]);
+            if m.is_present("e") {
+                let s = args[i];
+                print!(args[i]);
+            } else {
+                print!("{}", args[i]);
+            }
+
             if i < args.len() - 1 {
                 print!(" ");
             }

@@ -47,9 +47,34 @@ fn digits(number: usize) -> usize {
 fn main() {
     let m = App::new("wc")
         .arg(Arg::with_name("FILE").multiple(true))
-        .get_matches();
+        .arg(
+            Arg::with_name("lines")
+                .short("l")
+                .long("lines")
+                .help("print the newline counts"),
+        ).arg(
+            Arg::with_name("words")
+                .short("w")
+                .long("words")
+                .help("print the word counts"),
+        ).arg(
+            Arg::with_name("bytes")
+                .short("c")
+                .long("bytes")
+                .help("print the byte counts"),
+        ).get_matches();
     let mut results: Vec<(usize, usize, usize, &str)> = Vec::new();
     let mut total: (usize, usize, usize) = (0, 0, 0);
+
+    let mut print_lines = m.is_present("lines");
+    let mut print_words = m.is_present("words");
+    let mut print_bytes = m.is_present("bytes");
+
+    if !print_lines && !print_words && !print_bytes {
+        print_lines = true;
+        print_words = true;
+        print_bytes = true;
+    };
 
     let args: Vec<_> = if !m.is_present("FILE") {
         vec![""]
@@ -76,27 +101,40 @@ fn main() {
             if !is_special_file && !fs::metadata(a).unwrap().is_file() {
                 is_special_file = true;
             }
-        };
+        }
     }
 
     let l = results.len();
-    let width = digits(total.2);
+    let mut width: usize = 0;
 
-    let width = if is_special_file && width < 7 {
-        7
-    } else {
-        width
-    };
+    if print_lines {
+        width = digits(total.0);
+    }
+
+    if print_words {
+        width = digits(total.1);
+    }
+
+    if print_bytes {
+        width = digits(total.2);
+    }
+
+    if is_special_file && width < 7 {
+        width = 7
+    }
 
     for r in results {
-        println!(
-            "{:>width$} {:>width$} {:>width$} {}",
-            r.0,
-            r.1,
-            r.2,
-            r.3,
-            width = width
-        );
+        if print_lines {
+            print!("{:>width$} ", r.0, width = width);
+        }
+        if print_words {
+            print!("{:>width$} ", r.1, width = width);
+        }
+        if print_bytes {
+            print!("{:>width$} ", r.2, width = width);
+        }
+
+        println!("{}", r.3);
     }
 
     if l > 1 {
