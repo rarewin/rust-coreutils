@@ -16,12 +16,26 @@ fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>, line_start: u32) ->
                 if n == 0 {
                     break;
                 }
+
+                // print line number
                 if m.is_present("number-nonblank") {
                     print!("        ");
                     line -= 1;
                 } else if m.is_present("number") || m.is_present("number-nonblank") {
                     print!("{:>6}  ", line);
                 }
+
+                // convert TAB to "^I"
+                if m.is_present("show-tabs") {
+                    input = input.replace("\t", "^I");
+                }
+
+                // output "$" at the end of the lines
+                if m.is_present("show-ends") {
+                    input = input.replace("\n", "$\n");
+                }
+
+                // print line
                 print!("{}", input);
             }
             Err(error) => println!("error: {}", error),
@@ -46,6 +60,16 @@ fn main() {
                 .short("b")
                 .long("number-nonblank")
                 .help("number nonempty output lines, overrides -n"),
+        ).arg(
+            Arg::with_name("show-tabs")
+                .short("T")
+                .long("show-tabs")
+                .help("display TAB characters as ^I"),
+        ).arg(
+            Arg::with_name("show-ends")
+                .short("E")
+                .long("show-ends")
+                .help("display $ at end of each line"),
         ).get_matches();
 
     let args: Vec<_> = if !m.is_present("FILE") {
