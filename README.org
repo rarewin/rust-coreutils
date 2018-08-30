@@ -1,4 +1,4 @@
-* coreutils programs written with Rust
+* coreutils programs written in Rust
 
 ** Abstract
 
