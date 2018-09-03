@@ -1,0 +1,8 @@
+[package]
+name = "uname"
+version = "0.1.0"
+authors = ["Katsuki Kobayashi <rare@tirasweel.org>"]
+
+[dependencies]
+clap = "2"
+libc = "0.2.0"
