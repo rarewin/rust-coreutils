@@ -33,45 +33,66 @@ fn main() {
     };
 
     let m = App::new("uname")
+        .arg(Arg::with_name("all")
+             .short("a")
+             .long("all")
+             .help("print all information, in the following order,\nexcept omit -p and -i if unknown:"))
         .arg(Arg::with_name("kernel-name")
-                 .short("s")
-                 .long("kernel-name")
-                 .help("print the kernel name"))
+             .short("s")
+             .long("kernel-name")
+             .help("print the kernel name"))
         .arg(Arg::with_name("nodename")
-                 .short("n")
-                 .long("nodename")
-                 .help("print the network node hostname"))
+             .short("n")
+             .long("nodename")
+             .help("print the network node hostname"))
+        .arg(Arg::with_name("kernel-release")
+             .short("r")
+             .long("kernel-release")
+             .help("print the kernel release"))
+        .arg(Arg::with_name("kernel-version")
+             .short("v")
+             .long("kernel-version")
+             .help("print the kernel version"))
+        .arg(Arg::with_name("machine")
+             .short("m")
+             .long("machine")
+             .help("print the machine hardware name"))
         .get_matches();
+
+    // -p, --processor          print the processor type (non-portable)
+    // -i, --hardware-platform  print the hardware platform (non-portable)
+    // -o, --operating-system   print the operating system
 
     unsafe {
         uname(&mut buf as *mut libc::utsname);
     };
 
-    // let cstring = CString::new(buf.sysname.to_vec()).unwrap();
-
-    // let s = String::from_iter(buf.sysname);
-    // buf.sysname.iter().map(|c| *c).collect::<String>();
-    //let res = buf.sysname
-    //    .iter()
-    //    .map(|&c| c as u8 as char)
-    //    .collect::<String>();
-
-    if m.is_present("kernel-name") {
+    if m.is_present("kernel-name") || m.is_present("all") ||
+       (!m.is_present("nodename") && !m.is_present("kernel-release") &&
+        !m.is_present("kernel-version") && !m.is_present("machine")) {
         print_c_char(&buf.sysname);
         print!(" ");
     }
 
-    if m.is_present("nodename") {
+    if m.is_present("nodename") || m.is_present("all") {
         print_c_char(&buf.nodename);
         print!(" ");
     }
-    // print_c_char(&buf.release);
-    // print!(" ");
-    // print_c_char(&buf.version);
-    // print!(" ");
-    // print_c_char(&buf.machine);
-    // print!(" ");
-    // print_c_char(&buf.domainname);
+
+    if m.is_present("kernel-release") || m.is_present("all") {
+        print_c_char(&buf.release);
+        print!(" ");
+    }
+
+    if m.is_present("kernel-version") || m.is_present("all") {
+        print_c_char(&buf.version);
+        print!(" ");
+    }
+
+    if m.is_present("machine") || m.is_present("all") {
+        print_c_char(&buf.machine);
+        print!(" ");
+    }
 
     println!("");
 }
