@@ -9,12 +9,7 @@ use std::io;
 use std::io::{BufRead, BufReader};
 
 fn base64<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>) {
-    let wrap = if m.is_present("wrap") {
-        m.value_of("wrap").unwrap().parse().unwrap()
-    } else {
-        76 // default value
-    };
-
+    let wrap: usize = m.value_of("wrap").unwrap().parse().unwrap();
     let buf = r.fill_buf().unwrap();
 
     if buf.len() > 0 {
@@ -30,6 +25,8 @@ fn base64<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>) {
 
 fn main() {
     let m = App::new("base64")
+        .about("Base64 encode or decode FILE, or standard input, to standard output.
+With no FILE, or when FILE is -, read standard input.")
         .arg(Arg::with_name("FILE"))
         .arg(Arg::with_name("wrap")
              .short("w")
@@ -37,7 +34,8 @@ fn main() {
              .takes_value(true)
              .value_name("COLS")
              .number_of_values(1)
-             .help("wrap encoded lines after COLS character (default 76).\nUse 0 to disable line wrapping"),
+             .help("wrap encoded lines after COLS character (default 76).\nUse 0 to disable line wrapping")
+             .default_value("76"),
         ).get_matches();
 
     if m.is_present("FILE") {
