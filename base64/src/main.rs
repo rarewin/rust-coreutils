@@ -5,7 +5,28 @@ extern crate clap;
 
 use clap::{App, Arg};
 use std::fs::File;
+use std::io;
 use std::io::{BufRead, BufReader};
+
+fn base64<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>) {
+    let wrap = if m.is_present("wrap") {
+        m.value_of("wrap").unwrap().parse().unwrap()
+    } else {
+        76 // default value
+    };
+
+    let buf = r.fill_buf().unwrap();
+
+    if buf.len() > 0 {
+        let result = base64::encode(buf);
+        let mut i = 0;
+        while i < ((result.len() - 1) / wrap) {
+            println!("{}", &result[(i * wrap)..((i + 1) * wrap)]);
+            i += 1;
+        }
+        println!("{}", &result[(i * wrap)..]);
+    }
+}
 
 fn main() {
     let m = App::new("base64")
@@ -19,27 +40,12 @@ fn main() {
              .help("wrap encoded lines after COLS character (default 76).\nUse 0 to disable line wrapping"),
         ).get_matches();
 
-    let args: Vec<_> = if !m.is_present("FILE") {
-        vec!["-"]
+    if m.is_present("FILE") {
+        let mut file = BufReader::new(File::open(m.value_of("FILE").unwrap()).unwrap());
+        base64(&mut file, &m);
     } else {
-        m.values_of("FILE").unwrap().collect()
+        let stdin = io::stdin();
+        let mut stdin = stdin.lock();
+        base64(&mut stdin, &m);
     };
-
-    // let e = base64::encode(b"Hello World");
-    // println!("{}", e);
-
-    let mut file = BufReader::new(File::open(args[0]).unwrap());
-
-    let wrap = if m.is_present("wrap") {
-        m.value_of("wrap").unwrap().parse().unwrap()
-    } else {
-        76 // default value
-    };
-
-    println!("{}", wrap);
-
-    if file.fill_buf().unwrap().len() > 0 {
-        let result = base64::encode(file.buffer());
-        println!("{}", result);
-    }
 }
