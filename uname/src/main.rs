@@ -3,7 +3,7 @@ extern crate libc;
 
 use clap::{App, Arg};
 // use libc::{c_int, c_char, c_void, size_t};
-use libc::{c_char, utsname, uname};
+use libc::{c_char, uname, utsname};
 
 // struct utsname {
 //     char sysname[];    /* Operating system name (e.g., "Linux") */
@@ -22,7 +22,6 @@ fn print_c_char(buf: &[c_char]) {
 }
 
 fn main() {
-
     let mut buf: utsname = utsname {
         sysname: [0; 65],
         nodename: [0; 65],
@@ -33,30 +32,39 @@ fn main() {
     };
 
     let m = App::new("uname")
-        .arg(Arg::with_name("all")
-             .short("a")
-             .long("all")
-             .help("print all information, in the following order,\nexcept omit -p and -i if unknown:"))
-        .arg(Arg::with_name("kernel-name")
-             .short("s")
-             .long("kernel-name")
-             .help("print the kernel name"))
-        .arg(Arg::with_name("nodename")
-             .short("n")
-             .long("nodename")
-             .help("print the network node hostname"))
-        .arg(Arg::with_name("kernel-release")
-             .short("r")
-             .long("kernel-release")
-             .help("print the kernel release"))
-        .arg(Arg::with_name("kernel-version")
-             .short("v")
-             .long("kernel-version")
-             .help("print the kernel version"))
-        .arg(Arg::with_name("machine")
-             .short("m")
-             .long("machine")
-             .help("print the machine hardware name"))
+        .arg(Arg::with_name("all").short("a").long("all").help(
+            "print all information, in the following order,\nexcept omit -p and -i if unknown:",
+        ))
+        .arg(
+            Arg::with_name("kernel-name")
+                .short("s")
+                .long("kernel-name")
+                .help("print the kernel name"),
+        )
+        .arg(
+            Arg::with_name("nodename")
+                .short("n")
+                .long("nodename")
+                .help("print the network node hostname"),
+        )
+        .arg(
+            Arg::with_name("kernel-release")
+                .short("r")
+                .long("kernel-release")
+                .help("print the kernel release"),
+        )
+        .arg(
+            Arg::with_name("kernel-version")
+                .short("v")
+                .long("kernel-version")
+                .help("print the kernel version"),
+        )
+        .arg(
+            Arg::with_name("machine")
+                .short("m")
+                .long("machine")
+                .help("print the machine hardware name"),
+        )
         .get_matches();
 
     // -p, --processor          print the processor type (non-portable)
@@ -67,9 +75,13 @@ fn main() {
         uname(&mut buf as *mut libc::utsname);
     };
 
-    if m.is_present("kernel-name") || m.is_present("all") ||
-       (!m.is_present("nodename") && !m.is_present("kernel-release") &&
-        !m.is_present("kernel-version") && !m.is_present("machine")) {
+    if m.is_present("kernel-name")
+        || m.is_present("all")
+        || (!m.is_present("nodename")
+            && !m.is_present("kernel-release")
+            && !m.is_present("kernel-version")
+            && !m.is_present("machine"))
+    {
         print_c_char(&buf.sysname);
         print!(" ");
     }

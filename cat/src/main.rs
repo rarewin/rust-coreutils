@@ -69,27 +69,32 @@ fn main() {
                 .short("n")
                 .long("number")
                 .help("number all output lines"),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("number-nonblank")
                 .short("b")
                 .long("number-nonblank")
                 .help("number nonempty output lines, overrides -n"),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("show-tabs")
                 .short("T")
                 .long("show-tabs")
                 .help("display TAB characters as ^I"),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("show-ends")
                 .short("E")
                 .long("show-ends")
                 .help("display $ at end of each line"),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("squeeze-blank")
                 .short("s")
                 .long("squeeze-blank")
                 .help("suppress repeated empty output lines"),
-        ).arg(Arg::with_name("u").short("u").help("(ignored)"))
+        )
+        .arg(Arg::with_name("u").short("u").help("(ignored)"))
         .get_matches();
 
     let args: Vec<_> = if !m.is_present("FILE") {

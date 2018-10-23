@@ -1,0 +1,2 @@
+[workspace]
+members = ["base64/", "cat", "echo", "sleep", "uname", "wc"]

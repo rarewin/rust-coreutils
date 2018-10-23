@@ -52,17 +52,20 @@ fn main() {
                 .short("l")
                 .long("lines")
                 .help("print the newline counts"),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("words")
                 .short("w")
                 .long("words")
                 .help("print the word counts"),
-        ).arg(
+        )
+        .arg(
             Arg::with_name("bytes")
                 .short("c")
                 .long("bytes")
                 .help("print the byte counts"),
-        ).get_matches();
+        )
+        .get_matches();
     let mut results: Vec<(usize, usize, usize, &str)> = Vec::new();
     let mut total: (usize, usize, usize) = (0, 0, 0);
 
