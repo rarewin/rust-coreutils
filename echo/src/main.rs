@@ -11,20 +11,20 @@ fn main() {
                 .help("do not output the trailing newline"),
         )
         .get_matches();
+    let mut out = String::new();
 
     if m.is_present("STRING") {
-        let args: Vec<_> = m.values_of("STRING").unwrap().collect();
-
-        for i in 0..args.len() {
-            print!("{}", args[i]);
-
-            if i < args.len() - 1 {
-                print!(" ");
-            }
+        for v in m.values_of("STRING").unwrap() {
+            out.push_str(v);
+            out.push_str(" ");
         }
     }
 
+    out.pop(); // remove extra space
+
     if !m.is_present("n") {
-        println!("");
+        out.push_str("\n");
     }
+
+    print!("{}", out);
 }
