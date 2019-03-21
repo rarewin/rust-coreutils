@@ -1,5 +1,3 @@
-extern crate clap;
-
 use clap::{App, Arg};
 
 fn main() {
@@ -11,20 +9,15 @@ fn main() {
                 .help("do not output the trailing newline"),
         )
         .get_matches();
-    let mut out = String::new();
 
-    if m.is_present("STRING") {
-        for v in m.values_of("STRING").unwrap() {
-            out.push_str(v);
-            out.push_str(" ");
-        }
-    }
-
-    out.pop(); // remove extra space
-
-    if !m.is_present("n") {
-        out.push_str("\n");
-    }
+    let out = match m.values_of("STRING") {
+        Some(v) => v.collect::<Vec<&str>>().join(" "),
+        None => "".into(),
+    };
 
     print!("{}", out);
+
+    if !m.is_present("n") {
+        println!("");
+    }
 }
