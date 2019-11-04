@@ -1,5 +1,3 @@
-#![feature(bufreader_buffer)]
-
 extern crate base64;
 extern crate clap;
 
@@ -8,19 +6,63 @@ use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
 
-fn base64<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>) {
-    let wrap: usize = m.value_of("wrap").unwrap().parse().unwrap();
-    let buf = r.fill_buf().unwrap();
+use std::error;
+use std::fmt;
 
-    if buf.len() > 0 {
-        let result = base64::encode(buf);
-        let mut i = 0;
-        while i < ((result.len() - 1) / wrap) {
-            println!("{}", &result[(i * wrap)..((i + 1) * wrap)]);
-            i += 1;
-        }
-        println!("{}", &result[(i * wrap)..]);
+#[derive(Debug, Clone)]
+pub struct Base64Error(String);
+
+impl fmt::Display for Base64Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "error: {}\n", self.0)
     }
+}
+
+impl error::Error for Base64Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        None
+    }
+}
+
+fn base64<R: BufRead>(
+    f: &mut dyn std::io::Write,
+    r: &mut R,
+    m: &clap::ArgMatches<'_>,
+) -> Result<(), Base64Error> {
+    let wrap = match m.value_of("wrap") {
+        Some(d) => d,
+        None => {
+            return Err(Base64Error("invalid parameter for --wrap".into()));
+        }
+    };
+
+    let wrap = match wrap.parse::<usize>() {
+        Ok(d) => d,
+        Err(e) => {
+            return Err(Base64Error(format!("{}", e)));
+        }
+    };
+
+    let buf = match r.fill_buf() {
+        Ok(d) => d,
+        Err(e) => {
+            return Err(Base64Error(format!("{}", e)));
+        }
+    };
+
+    if buf.len() == 0 {
+        return Ok(());
+    }
+
+    let result = base64::encode(buf);
+    let len = result.len();
+
+    for i in 0..((len - 1) / wrap) {
+        writeln!(f, "{}", &result[(i * wrap)..((i + 1) * wrap)]).unwrap();
+    }
+    writeln!(f, "{}", &result[(len - (len % wrap))..]).unwrap();
+
+    Ok(())
 }
 
 fn main() {
@@ -39,11 +81,39 @@ With no FILE, or when FILE is -, read standard input.")
         ).get_matches();
 
     if m.is_present("FILE") {
-        let mut file = BufReader::new(File::open(m.value_of("FILE").unwrap()).unwrap());
-        base64(&mut file, &m);
+        let filename = match m.value_of("FILE") {
+            Some(f) => f,
+            None => {
+                println!("invald value for FILE");
+                return;
+            }
+        };
+
+        let file = match File::open(filename) {
+            Ok(d) => d,
+            Err(e) => {
+                println!("{}", e);
+                return;
+            }
+        };
+        let mut file = BufReader::new(file);
+
+        let stdout = io::stdout();
+        let mut stdout = stdout.lock();
+
+        match base64(&mut stdout, &mut file, &m) {
+            Ok(_) => {}
+            Err(e) => println!("{}", e),
+        };
     } else {
         let stdin = io::stdin();
+        let stdout = io::stdout();
         let mut stdin = stdin.lock();
-        base64(&mut stdin, &m);
+        let mut stdout = stdout.lock();
+
+        match base64(&mut stdout, &mut stdin, &m) {
+            Ok(_) => {}
+            Err(e) => println!("{}", e),
+        };
     };
 }
