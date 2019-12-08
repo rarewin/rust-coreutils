@@ -1,2 +1,11 @@
+[package]
+name = "rust-coreutils"
+version = "0.1.0"
+authors = ["Katsuki Kobayashi <rare@tirasweel.org>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.33"
+
 [workspace]
-members = ["base64/", "cat", "echo", "sleep", "uname", "wc"]
+members = ["base64/", "cat", "echo", "sleep", "uname"]

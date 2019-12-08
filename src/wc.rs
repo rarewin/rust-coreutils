@@ -1,50 +1,57 @@
-extern crate clap;
-
-use clap::{App, Arg};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::{fs, io};
 
-fn wc_data<R: BufRead>(r: &mut R) -> (usize, usize, usize) {
-    let mut input = String::new();
-    let mut nlines: usize = 0;
-    let mut nwords: usize = 0;
-    let mut nbytes: usize = 0;
+use clap::{App, Arg};
 
-    loop {
-        match r.read_line(&mut input) {
-            Ok(n) => {
-                if n == 0 {
-                    break;
-                }
-
-                nbytes += n;
-                nwords += input.split_whitespace().count();
-                nlines += 1;
-
-                input.clear();
-            }
-            Err(e) => println!("{}", e),
-        }
-    }
-
-    (nlines, nwords, nbytes)
+/// Count the numbers of lines, words, and bytes.
+///
+/// # Arguments
+///
+/// * `buf` - input string
+///
+/// # Example
+///
+/// ```
+/// use rust_coreutils::wc;
+///
+/// assert_eq!(wc::word_count("hoge fuga moge"), (0, 3, 14));
+/// assert_eq!(wc::word_count("hoge fuga moge\n"), (1, 3, 15));
+/// ```
+pub fn word_count<'a>(input: &'a str) -> (usize, usize, usize) {
+    let nlines = input.matches("\n").count();
+    let nwords = input.split_whitespace().count();
+    (nlines, nwords, input.len())
 }
 
-fn digits(number: usize) -> usize {
-    let mut d = 0;
-    let mut n = number;
+#[test]
+fn test_word_count() {
+    struct Test<'a> {
+        input: &'a str,
+        expect: (usize, usize, usize),
+    };
 
-    while n != 0 {
-        d += 1;
-        n /= 10;
+    let tests = vec![
+        Test {
+            input: "hoge fuga moge",
+            expect: (0, 3, 14),
+        },
+        Test {
+            input: "hoge fuga moge\n",
+            expect: (1, 3, 15),
+        },
+        Test {
+            input: "hoge\nge\nfuge\nmoge\n\nmoge",
+            expect: (5, 5, 23),
+        },
+    ];
+
+    for t in tests {
+        assert_eq!(word_count(t.input), t.expect);
     }
-
-    return d;
 }
 
-fn main() {
+pub fn cli_command(arg: &[String]) -> Result<(), String> {
     let m = App::new("wc")
         .arg(Arg::with_name("FILE").multiple(true))
         .arg(
@@ -65,9 +72,7 @@ fn main() {
                 .long("bytes")
                 .help("print the byte counts"),
         )
-        .get_matches();
-    let mut results: Vec<(usize, usize, usize, &str)> = Vec::new();
-    let mut total: (usize, usize, usize) = (0, 0, 0);
+        .get_matches_from(arg);
 
     let mut print_lines = m.is_present("lines");
     let mut print_words = m.is_present("words");
@@ -78,6 +83,42 @@ fn main() {
         print_words = true;
         print_bytes = true;
     };
+
+    let files = if let Some(it) = m.values_of("FILE") {
+        it.collect()
+    } else {
+        vec!["-"]
+    };
+
+    for f in files {
+        let file = File::open(f).expect("failed to open a file");
+        let mut buf_reader = BufReader::new(file);
+        let mut input = String::new();
+        buf_reader
+            .read_to_string(&mut input)
+            .expect("failed to read file");
+        println!("{}: {:?}", f, word_count(&input));
+    }
+
+    Ok(())
+}
+
+/*
+fn digits(number: usize) -> usize {
+    let mut d = 0;
+    let mut n = number;
+
+    while n != 0 {
+        d += 1;
+        n /= 10;
+    }
+
+    return d;
+}
+
+fn main() {
+    let mut results: Vec<(usize, usize, usize, &str)> = Vec::new();
+    let mut total: (usize, usize, usize) = (0, 0, 0);
 
     let args: Vec<_> = if !m.is_present("FILE") {
         vec![""]
@@ -150,3 +191,4 @@ fn main() {
         );
     }
 }
+*/
