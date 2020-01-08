@@ -67,13 +67,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "echo"
-version = "0.1.0"
-dependencies = [
- "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
