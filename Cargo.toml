@@ -8,4 +8,4 @@ edition = "2018"
 clap = "2.33"
 
 [workspace]
-members = ["base64/", "cat", "echo", "sleep", "uname"]
+members = ["base64/", "cat", "echo", "uname"]

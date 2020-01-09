@@ -2,11 +2,12 @@ extern crate rust_coreutils;
 
 use std::env;
 
-use rust_coreutils::wc;
+use rust_coreutils::{sleep, wc};
 
 fn run_command<'a>(arg: &[String]) -> Result<(), String> {
     match arg[0].as_str() {
         "wc" => wc::cli_command(arg),
+        "sleep" => sleep::cli_command(arg),
         _ => Err(format!("unsupported command {}", arg[0])),
     }
 }
