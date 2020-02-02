@@ -1,6 +1,8 @@
+use std::error;
+
 use clap::{App, Arg};
 
-pub fn cli_command(arg: &[String]) -> Result<(), String> {
+pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
     let m = App::new("echo")
         .arg(Arg::with_name("STRING").multiple(true))
         .arg(

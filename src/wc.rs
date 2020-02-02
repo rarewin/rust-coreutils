@@ -1,6 +1,7 @@
+use std::error;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::BufReader;
+use std::io::{self, BufReader};
 
 use clap::{App, Arg};
 
@@ -51,7 +52,7 @@ fn test_word_count() {
     }
 }
 
-pub fn cli_command(arg: &[String]) -> Result<(), String> {
+pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
     let m = App::new("wc")
         .arg(Arg::with_name("FILE").multiple(true))
         .arg(
@@ -74,15 +75,16 @@ pub fn cli_command(arg: &[String]) -> Result<(), String> {
         )
         .get_matches_from(arg);
 
-    let mut print_lines = m.is_present("lines");
-    let mut print_words = m.is_present("words");
-    let mut print_bytes = m.is_present("bytes");
-
-    if !print_lines && !print_words && !print_bytes {
-        print_lines = true;
-        print_words = true;
-        print_bytes = true;
-    };
+    let print_control =
+        if !m.is_present("lines") && !m.is_present("words") && !m.is_present("bytes") {
+            (true, true, true)
+        } else {
+            (
+                m.is_present("lines"),
+                m.is_present("words"),
+                m.is_present("bytes"),
+            )
+        };
 
     let files = if let Some(it) = m.values_of("FILE") {
         it.collect()
@@ -90,32 +92,48 @@ pub fn cli_command(arg: &[String]) -> Result<(), String> {
         vec!["-"]
     };
 
+    let mut result = Vec::<((usize, usize, usize), String)>::new();
+
     for f in files {
-        let file = File::open(f).expect("failed to open a file");
-        let mut buf_reader = BufReader::new(file);
         let mut input = String::new();
-        buf_reader
-            .read_to_string(&mut input)
-            .expect("failed to read file");
-        println!("{}: {:?}", f, word_count(&input));
+
+        if f == "-" {
+            let stdin = io::stdin();
+            let mut handle = stdin.lock();
+            handle.read_to_string(&mut input)?;
+        } else {
+            let file = File::open(f)?;
+            let mut buf_reader = BufReader::new(file);
+            buf_reader.read_to_string(&mut input)?;
+        }
+
+        result.push((word_count(&input), f.into()));
     }
+
+    print_result(&result, print_control);
 
     Ok(())
 }
 
-/*
-fn digits(number: usize) -> usize {
-    let mut d = 0;
-    let mut n = number;
+fn print_result(results: &Vec<((usize, usize, usize), String)>, control: (bool, bool, bool)) {
+    for r in results {
+        if control.0 {
+            print!("{}", (r.0).0);
+        }
 
-    while n != 0 {
-        d += 1;
-        n /= 10;
+        if control.1 {
+            print!(" {}", (r.0).1);
+        }
+
+        if control.2 {
+            print!(" {}", (r.0).2);
+        }
+
+        println!(" {}", r.1);
     }
-
-    return d;
 }
 
+/*
 fn main() {
     let mut results: Vec<(usize, usize, usize, &str)> = Vec::new();
     let mut total: (usize, usize, usize) = (0, 0, 0);
