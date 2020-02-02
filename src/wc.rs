@@ -5,7 +5,7 @@ use std::io::{self, BufReader};
 
 use clap::{App, Arg};
 
-/// Count the numbers of lines, words, and bytes.
+/// Count the numbers of returns, words, and bytes.
 ///
 /// # Arguments
 ///
