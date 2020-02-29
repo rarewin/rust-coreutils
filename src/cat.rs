@@ -1,10 +1,10 @@
-extern crate clap;
-
-use clap::{App, Arg};
+use std::error;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
+
+use clap::{App, Arg};
 
 fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>, line_start: u32) -> u32 {
     let mut input = String::new();
@@ -60,7 +60,7 @@ fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>, line_start: u32) ->
     return line;
 }
 
-fn main() {
+pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
     // parse option
     let m = App::new("cat")
         .arg(Arg::with_name("FILE").multiple(true))
@@ -95,7 +95,7 @@ fn main() {
                 .help("suppress repeated empty output lines"),
         )
         .arg(Arg::with_name("u").short("u").help("(ignored)"))
-        .get_matches();
+        .get_matches_from(arg);
 
     let args: Vec<_> = if !m.is_present("FILE") {
         vec!["-"]
@@ -114,4 +114,6 @@ fn main() {
             line = cat_data(&mut file, &m, line);
         };
     }
+
+    Ok(())
 }

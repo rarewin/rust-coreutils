@@ -9,4 +9,4 @@ clap = "2.33"
 libc = "0.2.0"
 
 [workspace]
-members = ["base64/", "cat"]
+members = ["base64/"]
