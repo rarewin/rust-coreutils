@@ -1,8 +1,6 @@
-extern crate clap;
-extern crate libc;
+use std::error;
 
 use clap::{App, Arg};
-// use libc::{c_int, c_char, c_void, size_t};
 use libc::{c_char, uname, utsname};
 
 // struct utsname {
@@ -21,7 +19,7 @@ fn print_c_char(buf: &[c_char]) {
     print!("{}", res);
 }
 
-fn main() {
+pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
     let mut buf: utsname = utsname {
         sysname: [0; 65],
         nodename: [0; 65],
@@ -65,7 +63,7 @@ fn main() {
                 .long("machine")
                 .help("print the machine hardware name"),
         )
-        .get_matches();
+        .get_matches_from(arg);
 
     // -p, --processor          print the processor type (non-portable)
     // -i, --hardware-platform  print the hardware platform (non-portable)
@@ -107,4 +105,6 @@ fn main() {
     }
 
     println!("");
+
+    Ok(())
 }

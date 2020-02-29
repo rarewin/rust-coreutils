@@ -4,7 +4,7 @@ use std::env;
 use std::error;
 use std::fmt;
 
-use rust_coreutils::{echo, sleep, wc};
+use rust_coreutils::{echo, sleep, uname, wc};
 
 #[derive(Debug, PartialEq)]
 pub enum CommandError {
@@ -30,6 +30,7 @@ fn run_command<'a>(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
         "wc" => wc::cli_command(arg),
         "echo" => echo::cli_command(arg),
         "sleep" => sleep::cli_command(arg),
+        "uname" => uname::cli_command(arg),
         _ => Err(Box::new(CommandError::CommandNotFound)),
     }
 }
