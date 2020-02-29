@@ -7,6 +7,4 @@ edition = "2018"
 [dependencies]
 clap = "2.33"
 libc = "0.2.0"
-
-[workspace]
-members = ["base64/"]
+base64 = "0.9"

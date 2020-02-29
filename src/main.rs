@@ -4,7 +4,7 @@ use std::env;
 use std::error;
 use std::fmt;
 
-use rust_coreutils::{cat, echo, sleep, uname, wc};
+use rust_coreutils::{base64, cat, echo, sleep, uname, wc};
 
 #[derive(Debug, PartialEq)]
 pub enum CommandError {
@@ -32,6 +32,7 @@ fn run_command<'a>(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
         "sleep" => sleep::cli_command(arg),
         "uname" => uname::cli_command(arg),
         "cat" => cat::cli_command(arg),
+        "base64" => base64::cli_command(arg),
         _ => Err(Box::new(CommandError::CommandNotFound)),
     }
 }
@@ -39,17 +40,14 @@ fn run_command<'a>(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
 fn main() {
     let command: Vec<String> = env::args().collect();
 
-    match run_command(&command[..]) {
-        Ok(_) => return,
-        Err(s) => {
-            if command.len() < 2 {
-                println!("{}", s);
-                return;
-            }
-        }
+    if let Ok(_) = run_command(&command[..]) {
+        return;
     }
 
-    if let Ok(_) = run_command(&command[1..]) {
-        return;
+    match run_command(&command[1..]) {
+        Ok(_) => {
+            return;
+        }
+        Err(s) => println!("{}", s),
     }
 }
