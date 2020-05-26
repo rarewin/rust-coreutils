@@ -1,9 +1,9 @@
-use std::error;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 
+use anyhow::{anyhow, Result};
 use clap::{App, Arg};
 
 fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>, line_start: u32) -> u32 {
@@ -60,7 +60,7 @@ fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>, line_start: u32) ->
     return line;
 }
 
-pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
+pub fn cli_command(arg: &[String]) -> Result<()> {
     // parse option
     let m = App::new("cat")
         .arg(Arg::with_name("FILE").multiple(true))
@@ -100,7 +100,11 @@ pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
     let args: Vec<_> = if !m.is_present("FILE") {
         vec!["-"]
     } else {
-        m.values_of("FILE").unwrap().collect()
+        if let Some(files) = m.values_of("FILE") {
+            files.collect()
+        } else {
+            return Err(anyhow!("invalid argument for FILE"));
+        }
     };
 
     let mut line = 1;
@@ -110,7 +114,7 @@ pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
             let mut stdin = stdin.lock();
             line = cat_data(&mut stdin, &m, line);
         } else {
-            let mut file = BufReader::new(File::open(args[i]).unwrap());
+            let mut file = BufReader::new(File::open(args[i])?);
             line = cat_data(&mut file, &m, line);
         };
     }

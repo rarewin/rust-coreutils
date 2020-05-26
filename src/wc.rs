@@ -1,8 +1,8 @@
-use std::error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 
+use anyhow::Result;
 use clap::{App, Arg};
 
 /// Count the numbers of returns, words, and bytes.
@@ -52,7 +52,7 @@ fn test_word_count() {
     }
 }
 
-pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
+pub fn cli_command(arg: &[String]) -> Result<()> {
     let m = App::new("wc")
         .arg(Arg::with_name("FILE").multiple(true))
         .arg(

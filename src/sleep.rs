@@ -1,5 +1,7 @@
+use std::{thread, time};
+
+use anyhow::Result;
 use clap::{App, Arg};
-use std::{error, thread, time};
 
 /// calculate sleep time by milliseconds from arguments
 ///
@@ -17,7 +19,7 @@ use std::{error, thread, time};
 /// assert!(sleep::calc_wait_time_ms(&vec!["1dd"]).is_err());
 /// assert!(sleep::calc_wait_time_ms(&vec!["s"]).is_err());
 /// ```
-pub fn calc_wait_time_ms(time_arg: &[&str]) -> Result<u64, Box<dyn error::Error>> {
+pub fn calc_wait_time_ms(time_arg: &[&str]) -> Result<u64> {
     let mut time: u64 = 0;
     for t in time_arg {
         let (val, mag) = if t.ends_with("s") {
@@ -115,7 +117,7 @@ fn test_string() {
     assert!(calc_wait_time_ms(&arg).is_err());
 }
 
-pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
+pub fn cli_command(arg: &[String]) -> Result<()> {
     let m = App::new("sleep")
         .arg(Arg::with_name("time").required(true).multiple(true))
         .get_matches_from(arg);

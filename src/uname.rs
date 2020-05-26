@@ -1,5 +1,4 @@
-use std::error;
-
+use anyhow::Result;
 use clap::{App, Arg};
 use libc::{c_char, uname, utsname};
 
@@ -19,7 +18,7 @@ fn print_c_char(buf: &[c_char]) {
     print!("{}", res);
 }
 
-pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
+pub fn cli_command(arg: &[String]) -> Result<()> {
     let mut buf: utsname = utsname {
         sysname: [0; 65],
         nodename: [0; 65],
