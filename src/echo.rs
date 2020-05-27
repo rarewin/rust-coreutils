@@ -1,6 +1,8 @@
+use std::error;
+
 use clap::{App, Arg};
 
-fn main() {
+pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
     let m = App::new("echo")
         .arg(Arg::with_name("STRING").multiple(true))
         .arg(
@@ -8,16 +10,15 @@ fn main() {
                 .short("n")
                 .help("do not output the trailing newline"),
         )
-        .get_matches();
+        .get_matches_from(arg);
 
-    let out = match m.values_of("STRING") {
-        Some(v) => v.collect::<Vec<&str>>().join(" "),
-        None => "".into(),
-    };
-
-    print!("{}", out);
+    if let Some(v) = m.values_of("STRING") {
+        print!("{}", v.collect::<Vec<&str>>().join(" "))
+    }
 
     if !m.is_present("n") {
         println!("");
     }
+
+    Ok(())
 }

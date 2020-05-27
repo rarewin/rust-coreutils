@@ -65,7 +65,7 @@ fn base64<R: BufRead>(
     Ok(())
 }
 
-fn main() {
+pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
     let m = App::new("base64")
         .about("Base64 encode or decode FILE, or standard input, to standard output.
 With no FILE, or when FILE is -, read standard input.")
@@ -78,24 +78,11 @@ With no FILE, or when FILE is -, read standard input.")
              .number_of_values(1)
              .help("wrap encoded lines after COLS character (default 76).\nUse 0 to disable line wrapping")
              .default_value("76"),
-        ).get_matches();
+        ).get_matches_from(arg);
 
     if m.is_present("FILE") {
-        let filename = match m.value_of("FILE") {
-            Some(f) => f,
-            None => {
-                println!("invald value for FILE");
-                return;
-            }
-        };
-
-        let file = match File::open(filename) {
-            Ok(d) => d,
-            Err(e) => {
-                println!("{}", e);
-                return;
-            }
-        };
+        let filename = m.value_of("FILE").unwrap();
+        let file = File::open(filename)?;
         let mut file = BufReader::new(file);
 
         let stdout = io::stdout();
@@ -116,4 +103,6 @@ With no FILE, or when FILE is -, read standard input.")
             Err(e) => println!("{}", e),
         };
     };
+
+    Ok(())
 }

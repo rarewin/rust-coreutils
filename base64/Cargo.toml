@@ -1,8 +1,0 @@
-[package]
-name = "base64"
-version = "0.1.0"
-authors = ["Katsuki Kobayashi <rare@tirasweel.org>"]
-
-[dependencies]
-clap = "2"
-base64 = "*"
