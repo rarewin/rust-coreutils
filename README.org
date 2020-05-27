@@ -1,4 +1,7 @@
-* coreutils programs written in Rust
+#+TITLE: coreutils programs written in Rust
+
+#+CAPTION: Build Status
+[[https://github.com/rarewin/rust-coreutils/workflows/Test/badge.svg]]
 
 ** Abstract
 
