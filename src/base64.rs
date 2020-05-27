@@ -1,54 +1,40 @@
 extern crate base64;
 extern crate clap;
 
-use clap::{App, Arg};
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader};
 
-use std::error;
-use std::fmt;
+use anyhow::{Error, Result};
+use clap::{App, Arg};
+use thiserror::Error;
 
-#[derive(Debug, Clone)]
-pub struct Base64Error(String);
-
-impl fmt::Display for Base64Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "error: {}\n", self.0)
-    }
-}
-
-impl error::Error for Base64Error {
-    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        None
-    }
+#[derive(Debug, Error)]
+pub enum Base64Error {
+    #[error("invalid parameter for {0}")]
+    InvalidParam(String),
 }
 
 fn base64<R: BufRead>(
     f: &mut dyn std::io::Write,
     r: &mut R,
     m: &clap::ArgMatches<'_>,
-) -> Result<(), Base64Error> {
+) -> Result<()> {
     let wrap = match m.value_of("wrap") {
         Some(d) => d,
         None => {
-            return Err(Base64Error("invalid parameter for --wrap".into()));
+            return Err(Error::new(Base64Error::InvalidParam("--wrap".to_string())));
         }
     };
 
     let wrap = match wrap.parse::<usize>() {
-        Ok(d) => d,
-        Err(e) => {
-            return Err(Base64Error(format!("{}", e)));
+        Ok(v) => v,
+        Err(_) => {
+            return Err(Error::new(Base64Error::InvalidParam("--wrap".to_string())));
         }
     };
 
-    let buf = match r.fill_buf() {
-        Ok(d) => d,
-        Err(e) => {
-            return Err(Base64Error(format!("{}", e)));
-        }
-    };
+    let buf = r.fill_buf()?;
 
     if buf.len() == 0 {
         return Ok(());
@@ -65,7 +51,7 @@ fn base64<R: BufRead>(
     Ok(())
 }
 
-pub fn cli_command(arg: &[String]) -> Result<(), Box<dyn error::Error>> {
+pub fn cli_command(arg: &[String]) -> Result<()> {
     let m = App::new("base64")
         .about("Base64 encode or decode FILE, or standard input, to standard output.
 With no FILE, or when FILE is -, read standard input.")
@@ -88,21 +74,15 @@ With no FILE, or when FILE is -, read standard input.")
         let stdout = io::stdout();
         let mut stdout = stdout.lock();
 
-        match base64(&mut stdout, &mut file, &m) {
-            Ok(_) => {}
-            Err(e) => println!("{}", e),
-        };
+        base64(&mut stdout, &mut file, &m)?;
     } else {
         let stdin = io::stdin();
         let stdout = io::stdout();
         let mut stdin = stdin.lock();
         let mut stdout = stdout.lock();
 
-        match base64(&mut stdout, &mut stdin, &m) {
-            Ok(_) => {}
-            Err(e) => println!("{}", e),
-        };
-    };
+        base64(&mut stdout, &mut stdin, &m)?;
+    }
 
     Ok(())
 }
