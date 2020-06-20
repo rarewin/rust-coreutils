@@ -36,7 +36,7 @@ fn base64<R: BufRead>(
 
     let buf = r.fill_buf()?;
 
-    if buf.len() == 0 {
+    if buf.is_empty() {
         return Ok(());
     }
 

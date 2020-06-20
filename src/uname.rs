@@ -103,7 +103,7 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
         print!(" ");
     }
 
-    println!("");
+    println!();
 
     Ok(())
 }

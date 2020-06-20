@@ -57,7 +57,8 @@ fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>, line_start: u32) ->
         input.clear();
         line += 1;
     }
-    return line;
+
+    line
 }
 
 pub fn cli_command(arg: &[String]) -> Result<()> {
@@ -99,22 +100,20 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
 
     let args: Vec<_> = if !m.is_present("FILE") {
         vec!["-"]
+    } else if let Some(files) = m.values_of("FILE") {
+        files.collect()
     } else {
-        if let Some(files) = m.values_of("FILE") {
-            files.collect()
-        } else {
-            return Err(anyhow!("invalid argument for FILE"));
-        }
+        return Err(anyhow!("invalid argument for FILE"));
     };
 
     let mut line = 1;
-    for i in 0..args.len() {
-        if args[i] == "-" {
+    for arg in args {
+        if arg == "-" {
             let stdin = io::stdin();
             let mut stdin = stdin.lock();
             line = cat_data(&mut stdin, &m, line);
         } else {
-            let mut file = BufReader::new(File::open(args[i])?);
+            let mut file = BufReader::new(File::open(arg)?);
             line = cat_data(&mut file, &m, line);
         };
     }

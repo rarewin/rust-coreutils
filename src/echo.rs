@@ -16,7 +16,7 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
     }
 
     if !m.is_present("n") {
-        println!("");
+        println!();
     }
 
     Ok(())

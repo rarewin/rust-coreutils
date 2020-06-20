@@ -22,13 +22,13 @@ use clap::{App, Arg};
 pub fn calc_wait_time_ms(time_arg: &[&str]) -> Result<u64> {
     let mut time: u64 = 0;
     for t in time_arg {
-        let (val, mag) = if t.ends_with("s") {
+        let (val, mag) = if t.ends_with('s') {
             (t.trim_end_matches('s'), 1000.0)
-        } else if t.ends_with("m") {
+        } else if t.ends_with('m') {
             (t.trim_end_matches('m'), 60.0 * 1000.0)
-        } else if t.ends_with("h") {
+        } else if t.ends_with('h') {
             (t.trim_end_matches('h'), 60.0 * 60.0 * 1000.0)
-        } else if t.ends_with("d") {
+        } else if t.ends_with('d') {
             (&t[..t.len() - 1], 24.0 * 60.0 * 60.0 * 1000.0)
         } else {
             (*t, 1000.0)
