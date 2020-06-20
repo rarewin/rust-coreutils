@@ -21,7 +21,7 @@ fn run_command(arg: &[String]) -> Result<()> {
 fn main() -> Result<()> {
     let command: Vec<String> = env::args().collect();
 
-    if let Ok(_) = run_command(&command[..]) {
+    if run_command(&command[..]).is_ok() {
         return Ok(());
     }
 

@@ -19,8 +19,8 @@ use clap::{App, Arg};
 /// assert_eq!(wc::word_count("hoge fuga moge"), (0, 3, 14));
 /// assert_eq!(wc::word_count("hoge fuga moge\n"), (1, 3, 15));
 /// ```
-pub fn word_count<'a>(input: &'a str) -> (usize, usize, usize) {
-    let nlines = input.matches("\n").count();
+pub fn word_count(input: &str) -> (usize, usize, usize) {
+    let nlines = input.matches('\n').count();
     let nwords = input.split_whitespace().count();
     (nlines, nwords, input.len())
 }
@@ -115,7 +115,7 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
     Ok(())
 }
 
-fn print_result(results: &Vec<((usize, usize, usize), String)>, control: (bool, bool, bool)) {
+fn print_result(results: &[((usize, usize, usize), String)], control: (bool, bool, bool)) {
     for r in results {
         if control.0 {
             print!("{}", (r.0).0);
