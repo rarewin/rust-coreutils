@@ -2,8 +2,7 @@ extern crate base64;
 extern crate clap;
 
 use std::fs::File;
-use std::io;
-use std::io::{BufRead, BufReader};
+use std::io::{self, Read, Write};
 
 use anyhow::{Error, Result};
 use clap::{App, Arg};
@@ -15,38 +14,24 @@ pub enum Base64Error {
     InvalidParam(String),
 }
 
-fn base64<R: BufRead>(
-    f: &mut dyn std::io::Write,
-    r: &mut R,
-    m: &clap::ArgMatches<'_>,
-) -> Result<()> {
-    let wrap = match m.value_of("wrap") {
-        Some(d) => d,
-        None => {
-            return Err(Error::new(Base64Error::InvalidParam("--wrap".to_string())));
-        }
-    };
+fn base64<R: Read, W: Write>(f: &mut W, r: &mut R, m: &clap::ArgMatches<'_>) -> Result<()> {
+    let wrap = m
+        .value_of("wrap")
+        .ok_or_else(|| Base64Error::InvalidParam("--wrap".to_string()))?
+        .parse::<usize>()
+        .or_else(|_| Err(Error::new(Base64Error::InvalidParam("--wrap".to_string()))))?;
+    let mut buf = Vec::new();
 
-    let wrap = match wrap.parse::<usize>() {
-        Ok(v) => v,
-        Err(_) => {
-            return Err(Error::new(Base64Error::InvalidParam("--wrap".to_string())));
-        }
-    };
+    r.read_to_end(&mut buf)?;
 
-    let buf = r.fill_buf()?;
-
-    if buf.is_empty() {
-        return Ok(());
-    }
-
-    let result = base64::encode(buf);
+    let result = base64::encode(&buf);
     let len = result.len();
 
-    for i in 0..((len - 1) / wrap) {
-        writeln!(f, "{}", &result[(i * wrap)..((i + 1) * wrap)]).unwrap();
+    for i in 0..(len / wrap) {
+        writeln!(f, "{}", &result[(i * wrap)..((i + 1) * wrap)])?;
     }
-    writeln!(f, "{}", &result[(len - (len % wrap))..]).unwrap();
+
+    writeln!(f, "{}", &result[(len / wrap) * wrap..])?;
 
     Ok(())
 }
@@ -68,8 +53,7 @@ With no FILE, or when FILE is -, read standard input.")
 
     if m.is_present("FILE") {
         let filename = m.value_of("FILE").unwrap();
-        let file = File::open(filename)?;
-        let mut file = BufReader::new(file);
+        let mut file = File::open(filename)?;
 
         let stdout = io::stdout();
         let mut stdout = stdout.lock();
