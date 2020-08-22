@@ -19,7 +19,7 @@ fn base64<R: Read, W: Write>(f: &mut W, r: &mut R, m: &clap::ArgMatches<'_>) -> 
         .value_of("wrap")
         .ok_or_else(|| Base64Error::InvalidParam("--wrap".to_string()))?
         .parse::<usize>()
-        .or_else(|_| Err(Error::new(Base64Error::InvalidParam("--wrap".to_string()))))?;
+        .map_err(|_| Error::new(Base64Error::InvalidParam("--wrap".to_string())))?;
     let mut buf = Vec::new();
 
     r.read_to_end(&mut buf)?;
