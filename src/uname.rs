@@ -1,6 +1,47 @@
 use anyhow::Result;
-use clap::{App, Arg};
+use clap::Clap;
 use libc::{c_char, uname, utsname};
+
+#[derive(Clap)]
+#[clap(
+    name = "uname",
+    about = "Print certain system information.  With no OPTION, same as -s."
+)]
+pub struct Opts {
+    #[clap(
+        short,
+        long,
+        about = "print all information, in the following order,
+except omit -p and -i if unknown:"
+    )]
+    all: bool,
+
+    #[clap(short = 's', long = "kernel-name", about = "print the kernel name")]
+    kernel_name: bool,
+
+    #[clap(short, long, about = "print the network node hostname")]
+    nodename: bool,
+
+    #[clap(
+        short = 'r',
+        long = "kernel-release",
+        about = "print the kernel release"
+    )]
+    kernel_release: bool,
+
+    #[clap(
+        short = 'v',
+        long = "kernel-version",
+        about = "print the kernel version"
+    )]
+    kernel_version: bool,
+
+    #[clap(short, long, about = "print the machine hardware name")]
+    machine: bool,
+    // -p, --processor          print the processor type (non-portable)
+    // -i, --hardware-platform  print the hardware platform (non-portable)
+    // -o, --operating-system   print the operating system
+}
 
 // struct utsname {
 //     char sysname[];    /* Operating system name (e.g., "Linux") */
@@ -28,77 +69,36 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
         domainname: [0; 65],
     };
 
-    let m = App::new("uname")
-        .arg(Arg::new("all").short('a').long("all").about(
-            "print all information, in the following order,\nexcept omit -p and -i if unknown:",
-        ))
-        .arg(
-            Arg::new("kernel-name")
-                .short('s')
-                .long("kernel-name")
-                .about("print the kernel name"),
-        )
-        .arg(
-            Arg::new("nodename")
-                .short('n')
-                .long("nodename")
-                .about("print the network node hostname"),
-        )
-        .arg(
-            Arg::new("kernel-release")
-                .short('r')
-                .long("kernel-release")
-                .about("print the kernel release"),
-        )
-        .arg(
-            Arg::new("kernel-version")
-                .short('v')
-                .long("kernel-version")
-                .about("print the kernel version"),
-        )
-        .arg(
-            Arg::new("machine")
-                .short('m')
-                .long("machine")
-                .about("print the machine hardware name"),
-        )
-        .get_matches_from(arg);
-
-    // -p, --processor          print the processor type (non-portable)
-    // -i, --hardware-platform  print the hardware platform (non-portable)
-    // -o, --operating-system   print the operating system
-
     unsafe {
         uname(&mut buf as *mut libc::utsname);
     };
 
-    if m.is_present("kernel-name")
-        || m.is_present("all")
-        || (!m.is_present("nodename")
-            && !m.is_present("kernel-release")
-            && !m.is_present("kernel-version")
-            && !m.is_present("machine"))
+    let opts = Opts::parse_from(arg);
+
+    if opts.kernel_name
+        || opts.all
+        || (!opts.nodename && !opts.kernel_release && !opts.kernel_version && !opts.machine)
     {
         print_c_char(&buf.sysname);
         print!(" ");
     }
 
-    if m.is_present("nodename") || m.is_present("all") {
+    if opts.nodename || opts.all {
         print_c_char(&buf.nodename);
         print!(" ");
     }
 
-    if m.is_present("kernel-release") || m.is_present("all") {
+    if opts.kernel_release || opts.all {
         print_c_char(&buf.release);
         print!(" ");
     }
 
-    if m.is_present("kernel-version") || m.is_present("all") {
+    if opts.kernel_version || opts.all {
         print_c_char(&buf.version);
         print!(" ");
     }
 
-    if m.is_present("machine") || m.is_present("all") {
+    if opts.machine || opts.all {
         print_c_char(&buf.machine);
         print!(" ");
     }

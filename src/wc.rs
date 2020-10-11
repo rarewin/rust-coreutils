@@ -3,7 +3,20 @@ use std::io::prelude::*;
 use std::io::{self, BufReader};
 
 use anyhow::Result;
-use clap::{App, Arg};
+use clap::Clap;
+
+#[derive(Clap)]
+#[clap(name = "wc")]
+struct Opts {
+    #[clap(short, long, about = "print the newline counts")]
+    lines: Option<usize>,
+    #[clap(short, long, about = "print the word counts")]
+    words: Option<usize>,
+    #[clap(short = 'c', long, about = "print the byte counts")]
+    bytes: Option<usize>,
+    #[clap(name = "FILE")]
+    files: Vec<String>,
+}
 
 /// Count the numbers of returns, words, and bytes.
 ///
@@ -53,43 +66,23 @@ fn test_word_count() {
 }
 
 pub fn cli_command(arg: &[String]) -> Result<()> {
-    let m = App::new("wc")
-        .arg(Arg::new("FILE").multiple(true))
-        .arg(
-            Arg::new("lines")
-                .short('l')
-                .long("lines")
-                .about("print the newline counts"),
-        )
-        .arg(
-            Arg::new("words")
-                .short('w')
-                .long("words")
-                .about("print the word counts"),
-        )
-        .arg(
-            Arg::new("bytes")
-                .short('c')
-                .long("bytes")
-                .about("print the byte counts"),
-        )
-        .get_matches_from(arg);
+    // parse option
+    let opts = Opts::parse_from(arg);
 
-    let print_control =
-        if !m.is_present("lines") && !m.is_present("words") && !m.is_present("bytes") {
-            (true, true, true)
-        } else {
-            (
-                m.is_present("lines"),
-                m.is_present("words"),
-                m.is_present("bytes"),
-            )
-        };
-
-    let files = if let Some(it) = m.values_of("FILE") {
-        it.collect()
+    let print_control = if opts.lines.is_none() && opts.words.is_none() && opts.bytes.is_none() {
+        (true, true, true)
     } else {
-        vec!["-"]
+        (
+            opts.lines.is_some(),
+            opts.words.is_some(),
+            opts.bytes.is_some(),
+        )
+    };
+
+    let files = if opts.files.is_empty() {
+        vec!["-".into()]
+    } else {
+        opts.files
     };
 
     let mut result = Vec::<((usize, usize, usize), String)>::new();
@@ -102,12 +95,12 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
             let mut handle = stdin.lock();
             handle.read_to_string(&mut input)?;
         } else {
-            let file = File::open(f)?;
+            let file = File::open(&f)?;
             let mut buf_reader = BufReader::new(file);
             buf_reader.read_to_string(&mut input)?;
         }
 
-        result.push((word_count(&input), f.into()));
+        result.push((word_count(&input), f));
     }
 
     print_result(&result, print_control);

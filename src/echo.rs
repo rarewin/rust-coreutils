@@ -1,21 +1,22 @@
 use anyhow::Result;
-use clap::{App, Arg};
+use clap::Clap;
+
+#[derive(Clap)]
+#[clap(name = "echo")]
+struct Opts {
+    #[clap(short)]
+    new_line: bool,
+
+    #[clap(name = "STRING", about = "do not output the trailing newline")]
+    strings: Vec<String>,
+}
 
 pub fn cli_command(arg: &[String]) -> Result<()> {
-    let m = App::new("echo")
-        .arg(Arg::new("STRING").multiple(true))
-        .arg(
-            Arg::new("n")
-                .short('n')
-                .about("do not output the trailing newline"),
-        )
-        .get_matches_from(arg);
+    let opts = Opts::parse_from(arg);
 
-    if let Some(v) = m.values_of("STRING") {
-        print!("{}", v.collect::<Vec<&str>>().join(" "))
-    }
+    print!("{}", opts.strings.join(" "));
 
-    if !m.is_present("n") {
+    if !opts.new_line {
         println!();
     }
 

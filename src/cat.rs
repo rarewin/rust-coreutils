@@ -3,10 +3,51 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 
-use anyhow::{anyhow, Result};
-use clap::{App, Arg};
+use anyhow::Result;
+use clap::Clap;
 
-fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches, line_start: u32) -> u32 {
+#[derive(Clap)]
+#[clap(name = "cat")]
+pub struct Opts {
+    #[clap(short, long, about = "number all output lines")]
+    number: bool,
+
+    #[clap(
+        short = 'b',
+        long = "number-nonblank",
+        about = "number nonempty output lines, overrides -n"
+    )]
+    number_nonblank: bool,
+
+    #[clap(
+        short = 'T',
+        long = "show-tabs",
+        about = "display TAB characters as ^I"
+    )]
+    show_tabs: bool,
+
+    #[clap(
+        short = 'E',
+        long = "show-ends",
+        about = "display $ at end of each line"
+    )]
+    show_ends: bool,
+
+    #[clap(
+        short = 's',
+        long = "squeeze-blank",
+        about = "suppress repeated empty output lines"
+    )]
+    squeeze_blank: bool,
+
+    #[clap(short = 'u', about = "(ignored)")]
+    _u: bool,
+
+    #[clap(name = "FILE")]
+    files: Vec<String>,
+}
+
+fn cat_data<R: BufRead>(r: &mut R, opts: &Opts, line_start: u32) -> u32 {
     let mut input = String::new();
     let mut line: u32 = line_start;
     let mut consecutive_blank_line: bool = false;
@@ -19,7 +60,7 @@ fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches, line_start: u32) -> u32
                 }
 
                 // manage "-s" option
-                if m.is_present("squeeze-blank") {
+                if opts.squeeze_blank {
                     if n == 1 {
                         if consecutive_blank_line {
                             input.clear();
@@ -32,20 +73,20 @@ fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches, line_start: u32) -> u32
                 }
 
                 // print line number
-                if m.is_present("number-nonblank") {
+                if opts.number_nonblank {
                     print!("        ");
                     line -= 1;
-                } else if m.is_present("number") || m.is_present("number-nonblank") {
+                } else if opts.number || opts.number_nonblank {
                     print!("{:>6}  ", line);
                 }
 
                 // convert TAB to "^I"
-                if m.is_present("show-tabs") {
+                if opts.show_tabs {
                     input = input.replace("\t", "^I");
                 }
 
                 // output "$" at the end of the lines
-                if m.is_present("show-ends") {
+                if opts.show_ends {
                     input = input.replace("\n", "$\n");
                 }
 
@@ -63,47 +104,12 @@ fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches, line_start: u32) -> u32
 
 pub fn cli_command(arg: &[String]) -> Result<()> {
     // parse option
-    let m = App::new("cat")
-        .arg(Arg::new("FILE").multiple(true))
-        .arg(
-            Arg::new("number")
-                .short('n')
-                .long("number")
-                .about("number all output lines"),
-        )
-        .arg(
-            Arg::new("number-nonblank")
-                .short('b')
-                .long("number-nonblank")
-                .about("number nonempty output lines, overrides -n"),
-        )
-        .arg(
-            Arg::new("show-tabs")
-                .short('T')
-                .long("show-tabs")
-                .about("display TAB characters as ^I"),
-        )
-        .arg(
-            Arg::new("show-ends")
-                .short('E')
-                .long("show-ends")
-                .about("display $ at end of each line"),
-        )
-        .arg(
-            Arg::new("squeeze-blank")
-                .short('s')
-                .long("squeeze-blank")
-                .about("suppress repeated empty output lines"),
-        )
-        .arg(Arg::new("u").short('u').about("(ignored)"))
-        .get_matches_from(arg);
+    let opts = Opts::parse_from(arg);
 
-    let args: Vec<_> = if !m.is_present("FILE") {
-        vec!["-"]
-    } else if let Some(files) = m.values_of("FILE") {
-        files.collect()
+    let args: Vec<_> = if opts.files.is_empty() {
+        vec!["-".into()]
     } else {
-        return Err(anyhow!("invalid argument for FILE"));
+        opts.files.clone()
     };
 
     let mut line = 1;
@@ -111,10 +117,10 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
         if arg == "-" {
             let stdin = io::stdin();
             let mut stdin = stdin.lock();
-            line = cat_data(&mut stdin, &m, line);
+            line = cat_data(&mut stdin, &opts, line);
         } else {
             let mut file = BufReader::new(File::open(arg)?);
-            line = cat_data(&mut file, &m, line);
+            line = cat_data(&mut file, &opts, line);
         };
     }
 
