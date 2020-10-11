@@ -54,24 +54,24 @@ fn test_word_count() {
 
 pub fn cli_command(arg: &[String]) -> Result<()> {
     let m = App::new("wc")
-        .arg(Arg::with_name("FILE").multiple(true))
+        .arg(Arg::new("FILE").multiple(true))
         .arg(
-            Arg::with_name("lines")
-                .short("l")
+            Arg::new("lines")
+                .short('l')
                 .long("lines")
-                .help("print the newline counts"),
+                .about("print the newline counts"),
         )
         .arg(
-            Arg::with_name("words")
-                .short("w")
+            Arg::new("words")
+                .short('w')
                 .long("words")
-                .help("print the word counts"),
+                .about("print the word counts"),
         )
         .arg(
-            Arg::with_name("bytes")
-                .short("c")
+            Arg::new("bytes")
+                .short('c')
                 .long("bytes")
-                .help("print the byte counts"),
+                .about("print the byte counts"),
         )
         .get_matches_from(arg);
 

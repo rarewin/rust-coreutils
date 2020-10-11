@@ -14,7 +14,7 @@ pub enum Base64Error {
     InvalidParam(String),
 }
 
-fn base64<R: Read, W: Write>(f: &mut W, r: &mut R, m: &clap::ArgMatches<'_>) -> Result<()> {
+fn base64<R: Read, W: Write>(f: &mut W, r: &mut R, m: &clap::ArgMatches) -> Result<()> {
     let wrap = m
         .value_of("wrap")
         .ok_or_else(|| Base64Error::InvalidParam("--wrap".to_string()))?
@@ -40,14 +40,14 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
     let m = App::new("base64")
         .about("Base64 encode or decode FILE, or standard input, to standard output.
 With no FILE, or when FILE is -, read standard input.")
-        .arg(Arg::with_name("FILE"))
-        .arg(Arg::with_name("wrap")
-             .short("w")
+        .arg(Arg::new("FILE"))
+        .arg(Arg::new("wrap")
+             .short('w')
              .long("wrap")
              .takes_value(true)
              .value_name("COLS")
              .number_of_values(1)
-             .help("wrap encoded lines after COLS character (default 76).\nUse 0 to disable line wrapping")
+             .about("wrap encoded lines after COLS character (default 76).\nUse 0 to disable line wrapping")
              .default_value("76"),
         ).get_matches_from(arg);
 

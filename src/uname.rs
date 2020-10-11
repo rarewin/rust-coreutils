@@ -29,38 +29,38 @@ pub fn cli_command(arg: &[String]) -> Result<()> {
     };
 
     let m = App::new("uname")
-        .arg(Arg::with_name("all").short("a").long("all").help(
+        .arg(Arg::new("all").short('a').long("all").about(
             "print all information, in the following order,\nexcept omit -p and -i if unknown:",
         ))
         .arg(
-            Arg::with_name("kernel-name")
-                .short("s")
+            Arg::new("kernel-name")
+                .short('s')
                 .long("kernel-name")
-                .help("print the kernel name"),
+                .about("print the kernel name"),
         )
         .arg(
-            Arg::with_name("nodename")
-                .short("n")
+            Arg::new("nodename")
+                .short('n')
                 .long("nodename")
-                .help("print the network node hostname"),
+                .about("print the network node hostname"),
         )
         .arg(
-            Arg::with_name("kernel-release")
-                .short("r")
+            Arg::new("kernel-release")
+                .short('r')
                 .long("kernel-release")
-                .help("print the kernel release"),
+                .about("print the kernel release"),
         )
         .arg(
-            Arg::with_name("kernel-version")
-                .short("v")
+            Arg::new("kernel-version")
+                .short('v')
                 .long("kernel-version")
-                .help("print the kernel version"),
+                .about("print the kernel version"),
         )
         .arg(
-            Arg::with_name("machine")
-                .short("m")
+            Arg::new("machine")
+                .short('m')
                 .long("machine")
-                .help("print the machine hardware name"),
+                .about("print the machine hardware name"),
         )
         .get_matches_from(arg);
 

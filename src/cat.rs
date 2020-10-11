@@ -6,7 +6,7 @@ use std::io::BufReader;
 use anyhow::{anyhow, Result};
 use clap::{App, Arg};
 
-fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>, line_start: u32) -> u32 {
+fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches, line_start: u32) -> u32 {
     let mut input = String::new();
     let mut line: u32 = line_start;
     let mut consecutive_blank_line: bool = false;
@@ -64,38 +64,38 @@ fn cat_data<R: BufRead>(r: &mut R, m: &clap::ArgMatches<'_>, line_start: u32) ->
 pub fn cli_command(arg: &[String]) -> Result<()> {
     // parse option
     let m = App::new("cat")
-        .arg(Arg::with_name("FILE").multiple(true))
+        .arg(Arg::new("FILE").multiple(true))
         .arg(
-            Arg::with_name("number")
-                .short("n")
+            Arg::new("number")
+                .short('n')
                 .long("number")
-                .help("number all output lines"),
+                .about("number all output lines"),
         )
         .arg(
-            Arg::with_name("number-nonblank")
-                .short("b")
+            Arg::new("number-nonblank")
+                .short('b')
                 .long("number-nonblank")
-                .help("number nonempty output lines, overrides -n"),
+                .about("number nonempty output lines, overrides -n"),
         )
         .arg(
-            Arg::with_name("show-tabs")
-                .short("T")
+            Arg::new("show-tabs")
+                .short('T')
                 .long("show-tabs")
-                .help("display TAB characters as ^I"),
+                .about("display TAB characters as ^I"),
         )
         .arg(
-            Arg::with_name("show-ends")
-                .short("E")
+            Arg::new("show-ends")
+                .short('E')
                 .long("show-ends")
-                .help("display $ at end of each line"),
+                .about("display $ at end of each line"),
         )
         .arg(
-            Arg::with_name("squeeze-blank")
-                .short("s")
+            Arg::new("squeeze-blank")
+                .short('s')
                 .long("squeeze-blank")
-                .help("suppress repeated empty output lines"),
+                .about("suppress repeated empty output lines"),
         )
-        .arg(Arg::with_name("u").short("u").help("(ignored)"))
+        .arg(Arg::new("u").short('u').about("(ignored)"))
         .get_matches_from(arg);
 
     let args: Vec<_> = if !m.is_present("FILE") {

@@ -119,7 +119,7 @@ fn test_string() {
 
 pub fn cli_command(arg: &[String]) -> Result<()> {
     let m = App::new("sleep")
-        .arg(Arg::with_name("time").required(true).multiple(true))
+        .arg(Arg::new("time").required(true).multiple(true))
         .get_matches_from(arg);
 
     if let Some(time_arg) = m.values_of("time") {
