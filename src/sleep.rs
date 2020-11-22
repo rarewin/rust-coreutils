@@ -1,7 +1,14 @@
 use std::{thread, time};
 
 use anyhow::Result;
-use clap::{App, Arg};
+use clap::Clap;
+
+#[derive(Clap)]
+#[clap(name = "sleep")]
+pub struct Opts {
+    #[clap(name = "NUMBER")]
+    numbers: Vec<String>,
+}
 
 /// calculate sleep time by milliseconds from arguments
 ///
@@ -14,12 +21,12 @@ use clap::{App, Arg};
 /// ```
 /// use rust_coreutils::sleep;
 ///
-/// assert_eq!(sleep::calc_wait_time_ms(&vec!["1s", "1m", "2m"]).unwrap(), 181000);
-/// assert_eq!(sleep::calc_wait_time_ms(&vec!["1d", "0.1"]).unwrap(), 86400100);
-/// assert!(sleep::calc_wait_time_ms(&vec!["1dd"]).is_err());
-/// assert!(sleep::calc_wait_time_ms(&vec!["s"]).is_err());
+/// assert_eq!(sleep::calc_wait_time_ms(&["1s".into(), "1m".into(), "2m".into()]).unwrap(), 181000);
+/// assert_eq!(sleep::calc_wait_time_ms(&["1d".into(), "0.1".into()]).unwrap(), 86400100);
+/// assert!(sleep::calc_wait_time_ms(&["1dd".into()]).is_err());
+/// assert!(sleep::calc_wait_time_ms(&["s".into()]).is_err());
 /// ```
-pub fn calc_wait_time_ms(time_arg: &[&str]) -> Result<u64> {
+pub fn calc_wait_time_ms(time_arg: &[String]) -> Result<u64> {
     let mut time: u64 = 0;
     for t in time_arg {
         let (val, mag) = if let Some(sec) = t.strip_suffix('s') {
@@ -31,7 +38,7 @@ pub fn calc_wait_time_ms(time_arg: &[&str]) -> Result<u64> {
         } else if let Some(day) = t.strip_suffix('d') {
             (day, 24.0 * 60.0 * 60.0 * 1000.0)
         } else {
-            (*t, 1000.0)
+            (&t[..], 1000.0)
         };
 
         let s = val.parse::<f64>()?;
@@ -71,62 +78,57 @@ fn test_calc_wait_time_ms() {
 
 #[test]
 fn test_floating_value() {
-    let arg = vec!["1.0"];
+    let arg = ["1.0".into()];
     assert_eq!(1000, calc_wait_time_ms(&arg).unwrap());
 }
 
 #[test]
 fn test_floating_values() {
-    let arg = vec!["1.0", "2.1"];
+    let arg = ["1.0".into(), "2.1".into()];
     assert_eq!(3100, calc_wait_time_ms(&arg).unwrap());
 }
 
 #[test]
 fn test_second() {
-    let arg = vec!["1s", "2.1"];
+    let arg = ["1s".into(), "2.1".into()];
     assert_eq!(3100, calc_wait_time_ms(&arg).unwrap());
 }
 
 #[test]
 fn test_minitue() {
-    let arg = vec!["1s", "2m"];
+    let arg = ["1s".into(), "2m".into()];
     assert_eq!(121000, calc_wait_time_ms(&arg).unwrap());
 }
 
 #[test]
 fn test_hour() {
-    let arg = vec!["1h", "2m"];
+    let arg = ["1h".into(), "2m".into()];
     assert_eq!(3720000, calc_wait_time_ms(&arg).unwrap());
 }
 
 #[test]
 fn test_day() {
-    let arg = vec!["1d", "2d"];
+    let arg = ["1d".into(), "2d".into()];
     assert_eq!(259200000, calc_wait_time_ms(&arg).unwrap());
 }
 
 #[test]
 fn test_invalid_suffix() {
-    let arg = vec!["1o"];
+    let arg = ["1o".into()];
     assert!(calc_wait_time_ms(&arg).is_err());
 }
 
 #[test]
 fn test_string() {
-    let arg = vec!["hoge", "fuga", "moge"];
+    let arg = ["hoge".into(), "fuga".into(), "moge".into()];
     assert!(calc_wait_time_ms(&arg).is_err());
 }
 
 pub fn cli_command(arg: &[String]) -> Result<()> {
-    let m = App::new("sleep")
-        .arg(Arg::with_name("time").required(true).multiple(true))
-        .get_matches_from(arg);
+    let opts = Opts::parse_from(arg);
 
-    if let Some(time_arg) = m.values_of("time") {
-        let times: Vec<&str> = time_arg.collect();
-        let time = calc_wait_time_ms(&times)?;
-        thread::sleep(time::Duration::from_millis(time));
-    }
+    let time = calc_wait_time_ms(&opts.numbers)?;
+    thread::sleep(time::Duration::from_millis(time));
 
     Ok(())
 }
