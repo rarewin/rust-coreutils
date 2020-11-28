@@ -3,8 +3,8 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 
-use anyhow::Result;
 use clap::Clap;
+use thiserror::Error;
 
 #[derive(Clap)]
 #[clap(name = "cat")]
@@ -45,6 +45,12 @@ pub struct Opts {
 
     #[clap(name = "FILE")]
     files: Vec<String>,
+}
+
+#[derive(Debug, Error)]
+pub enum CatError {
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
 }
 
 fn cat_data<R: BufRead>(r: &mut R, opts: &Opts, line_start: u32) -> u32 {
@@ -102,7 +108,7 @@ fn cat_data<R: BufRead>(r: &mut R, opts: &Opts, line_start: u32) -> u32 {
     line
 }
 
-pub fn cli_command(arg: &[String]) -> Result<()> {
+pub fn cli_command(arg: &[String]) -> Result<(), CatError> {
     // parse option
     let opts = Opts::parse_from(arg);
 

@@ -2,8 +2,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 
-use anyhow::Result;
 use clap::Clap;
+use thiserror::Error;
 
 #[derive(Clap)]
 #[clap(name = "wc")]
@@ -16,6 +16,12 @@ struct Opts {
     bytes: Option<usize>,
     #[clap(name = "FILE")]
     files: Vec<String>,
+}
+
+#[derive(Debug, Error)]
+pub enum WordCountError {
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
 }
 
 /// Count the numbers of returns, words, and bytes.
@@ -65,7 +71,7 @@ fn test_word_count() {
     }
 }
 
-pub fn cli_command(arg: &[String]) -> Result<()> {
+pub fn cli_command(arg: &[String]) -> Result<(), WordCountError> {
     // parse option
     let opts = Opts::parse_from(arg);
 

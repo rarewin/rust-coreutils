@@ -1,6 +1,6 @@
-use anyhow::Result;
 use clap::Clap;
 use libc::{c_char, uname, utsname};
+use thiserror::Error;
 
 #[derive(Clap)]
 #[clap(
@@ -43,6 +43,9 @@ except omit -p and -i if unknown:"
     // -o, --operating-system   print the operating system
 }
 
+#[derive(Debug, Error)]
+pub enum UnameError {}
+
 // struct utsname {
 //     char sysname[];    /* Operating system name (e.g., "Linux") */
 //     char nodename[];   /* Name within "some implementation-defined network" */
@@ -59,7 +62,7 @@ fn print_c_char(buf: &[c_char]) {
     print!("{}", res);
 }
 
-pub fn cli_command(arg: &[String]) -> Result<()> {
+pub fn cli_command(arg: &[String]) -> Result<(), UnameError> {
     let mut buf: utsname = utsname {
         sysname: [0; 65],
         nodename: [0; 65],
