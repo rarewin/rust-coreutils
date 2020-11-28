@@ -1,13 +1,21 @@
 use std::{thread, time};
 
-use anyhow::Result;
 use clap::Clap;
+use thiserror::Error;
 
 #[derive(Clap)]
 #[clap(name = "sleep")]
 pub struct Opts {
     #[clap(name = "NUMBER")]
     numbers: Vec<String>,
+}
+
+#[derive(Debug, Error)]
+pub enum SleepError {
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+    #[error(transparent)]
+    ParseFloatError(#[from] std::num::ParseFloatError),
 }
 
 /// calculate sleep time by milliseconds from arguments
@@ -26,7 +34,7 @@ pub struct Opts {
 /// assert!(sleep::calc_wait_time_ms(&["1dd".into()]).is_err());
 /// assert!(sleep::calc_wait_time_ms(&["s".into()]).is_err());
 /// ```
-pub fn calc_wait_time_ms(time_arg: &[String]) -> Result<u64> {
+pub fn calc_wait_time_ms(time_arg: &[String]) -> Result<u64, SleepError> {
     let mut time: u64 = 0;
     for t in time_arg {
         let (val, mag) = if let Some(sec) = t.strip_suffix('s') {
@@ -124,7 +132,7 @@ fn test_string() {
     assert!(calc_wait_time_ms(&arg).is_err());
 }
 
-pub fn cli_command(arg: &[String]) -> Result<()> {
+pub fn cli_command(arg: &[String]) -> Result<(), SleepError> {
     let opts = Opts::parse_from(arg);
 
     let time = calc_wait_time_ms(&opts.numbers)?;

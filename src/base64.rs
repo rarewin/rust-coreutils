@@ -2,8 +2,8 @@ use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
-use anyhow::Result;
 use clap::Clap;
+use thiserror::Error;
 
 #[derive(Clap)]
 #[clap(
@@ -25,7 +25,13 @@ Use 0 to disable line wrapping"
     file_name: Option<PathBuf>,
 }
 
-fn base64<R: Read, W: Write>(f: &mut W, r: &mut R, opts: &Opts) -> Result<()> {
+#[derive(Debug, Error)]
+pub enum Base64Error {
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+}
+
+fn base64<R: Read, W: Write>(f: &mut W, r: &mut R, opts: &Opts) -> Result<(), Base64Error> {
     let wrap = if let Some(w) = opts.wrap { w } else { 76 };
     let mut buf = Vec::new();
 
@@ -43,7 +49,7 @@ fn base64<R: Read, W: Write>(f: &mut W, r: &mut R, opts: &Opts) -> Result<()> {
     Ok(())
 }
 
-pub fn cli_command(arg: &[String]) -> Result<()> {
+pub fn cli_command(arg: &[String]) -> Result<(), Base64Error> {
     let opts = Opts::parse_from(arg);
 
     if let Some(filename) = &opts.file_name {
