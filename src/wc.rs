@@ -49,7 +49,7 @@ fn test_word_count() {
     struct Test<'a> {
         input: &'a str,
         expect: (usize, usize, usize),
-    };
+    }
 
     let tests = vec![
         Test {
